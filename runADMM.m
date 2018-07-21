@@ -25,10 +25,10 @@ end
 
 for i = 1:maxiter 
     % update A: Dynamics matrix
-    A = (XX1 - B*UX1 - Lam + rho*Z) \ XX0;
+    A = (XX1 - B*UX1 - Lam + rho*Z) / XX0;
     
     % update B: Input filters
-    B = (UX0' - A*UX1') \ UU0;
+    B = (UX0' - A*UX1') / UU0;
     
     % update Z: Auxiliary variable
     Z_old = Z;
@@ -38,7 +38,7 @@ for i = 1:maxiter
     Lam = Lam + rho * (A - Z);
     
     % compute objective function values 
-    history.objval(k)  = objective();
+    history.objval(k)  = costFunction(X,U,A,B,lam);
 
     history.r_norm(k)  = norm(A - Z, 'fro');
     history.s_norm(k)  = norm(-rho*(Z - Z_old),'fro');
