@@ -1,4 +1,4 @@
-function [A,B,history] = runADMM(maxiter,X,U,lam,rho);
+function [A,B,history] = runADMM(maxiter,X,U,B0,lam,rho);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % get size of responses and input
@@ -17,13 +17,30 @@ RELTOL   = 1e-4;
 Lam = zeros(N,N);
 Z   = zeros(N,N);
 
+%B0 is the initial estimate of B
+
 if ~QUIET
     fprintf('starting to run ADMM...\n')
     fprintf('%3s\t%10s\t%10s\t%10s\t%10s\t%10s\n', 'iter', ...
       'r norm', 'eps pri', 's norm', 'eps dual', 'objective');
 end
 
-for i = 1:maxiter 
+% first iteration uses B0
+    % update A: Dynamics matrix
+    A = (XX1 - B0*UX1 - Lam + rho*Z) / XX0;
+    
+    % update B: Input filters
+    B = (UX0' - A*UX1') / UU0;
+    
+    % update Z: Auxiliary variable
+    Z_old = Z;
+    Z = shrinkage(A + 1/rho * Lam, lam/rho);
+    
+    % update Lam: Lagrange multiplier
+    Lam = Lam + rho * (A - Z);
+
+for k = 2:maxiter 
+    t_iter = tic;
     % update A: Dynamics matrix
     A = (XX1 - B*UX1 - Lam + rho*Z) / XX0;
     
